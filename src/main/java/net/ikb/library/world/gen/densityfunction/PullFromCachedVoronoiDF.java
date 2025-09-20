@@ -35,13 +35,7 @@ public class PullFromCachedVoronoiDF implements SeededDensityFunction {
 
     @Override
     public double compute(FunctionContext pos) {
-        if (this.ordinal == 1) {
-            return switch (mode) {
-                default -> this.cachedVoronoi.getDistance(pos, ordinal - 1);
-                case 1 -> this.cachedVoronoi.getValue(pos, ordinal - 1);
-                case 2 -> this.cachedVoronoi.getVelocity(pos, ordinal - 1);
-            };
-        } else return switch (mode) {
+        return switch (mode) {
             default -> this.cachedVoronoi.getDistance(pos, ordinal - 1);
             case 1 -> this.cachedVoronoi.getValue(pos, ordinal - 1);
             case 2 -> this.cachedVoronoi.getVelocity(pos, ordinal - 1);
