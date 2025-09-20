@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "net.ikb.library.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "IkbLibrarySeedFromVisitor",
+    "IkbLibraryStackableBaseFlowingFluid",
+    "IkbLibraryStackableFlowingFluid",
+    "IkbLibraryStackableFluidOnEyes",
+    "IkbLibraryStackableLavaFluid",
+    "IkbLibraryStackableWaterFluid"
+  ],
+  "client": [
+    "ikbLibraryStackableFluidFog",
+    "IkbLibraryStackableLiquidRender",
+    "IkbLibraryStackableSectionCompiler"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
