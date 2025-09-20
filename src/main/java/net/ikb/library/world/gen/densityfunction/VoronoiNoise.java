@@ -1,7 +1,6 @@
 package net.ikb.library.world.gen.densityfunction;
 
 import net.minecraft.core.Vec3i;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.phys.Vec3;
 
@@ -12,10 +11,6 @@ public class VoronoiNoise {
 
     public static VoronoiNoise create(long seed) {
         return new VoronoiNoise(seed);
-    }
-
-    public static VoronoiNoise create(RandomSource random) {
-        return new VoronoiNoise(random.nextLong());
     }
 
     VoronoiNoise(long seed) {
@@ -77,8 +72,6 @@ public class VoronoiNoise {
         VoronoiPlate[] sortPlates = new VoronoiPlate[ordinal];
 
         double[] sortDistances = new double[ordinal];
-        double[] sortValues = new double[ordinal];
-        double[] sortVelocities = new double[ordinal];
 
         Arrays.fill(sortDistances, Double.MAX_VALUE);
 
@@ -106,15 +99,11 @@ public class VoronoiNoise {
             }
         }
 
-        for (int i = 0; i < ordinal; i++) {
-            sortValues[i] = sortPlates[i].getValue();
-            sortVelocities[i] = i == 0 ? 0 : sortPlates[0].relativeVelocity(sortPlates[i]);
-        }
-
         return switch (mode) {
             default -> sortDistances[ordinal - 1];
-            case 1 -> sortValues[ordinal - 1];
-            case 2 -> sortVelocities[ordinal - 1];
+            case 1 -> sortPlates[ordinal - 1].getValue();
+            case 2 -> sortPlates[0].relativeVelocity(sortPlates[ordinal - 1]);
+            case 3 -> sortPlates[0].velocity() == sortPlates[ordinal - 1].velocity() ? 1 : 0;
         };
     }
 

@@ -7,7 +7,6 @@ import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.world.level.levelgen.DensityFunction;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 
 public class CachedVoronoiDF implements SeededDensityFunction {
 
@@ -57,6 +56,10 @@ public class CachedVoronoiDF implements SeededDensityFunction {
 
     public double getVelocity(FunctionContext pos, int index) {
         return this.maxCheck > index && this.noise != null ? this.noise.getVelocities(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
+    }
+
+    public double getPassive(FunctionContext pos, int index) {
+        return this.maxCheck > index && this.noise != null ? this.noise.getPassives(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
     }
 
     @Override

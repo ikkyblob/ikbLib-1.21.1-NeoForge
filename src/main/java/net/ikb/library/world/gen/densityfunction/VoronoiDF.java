@@ -4,15 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.KeyDispatchDataCodec;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 public class VoronoiDF implements SeededDensityFunction {
 
@@ -23,7 +17,7 @@ public class VoronoiDF implements SeededDensityFunction {
                     Codec.DOUBLE.fieldOf("scale").forGetter((input) -> input.scale),
                     Codec.doubleRange(0.0,0.5).optionalFieldOf("jitter", 0.4).forGetter((input) -> input.jitter),
                     Codec.intRange(0,5).optionalFieldOf("metric", 1).forGetter((input) -> input.metric),
-                    Codec.intRange(0,2).optionalFieldOf("mode", 0).forGetter((input) -> input.mode),
+                    Codec.intRange(0,3).optionalFieldOf("mode", 0).forGetter((input) -> input.mode),
                     Codec.intRange(1,9).optionalFieldOf("ordinal", 1).forGetter((input) -> input.ordinal)
             ).apply(instance, VoronoiDF::new)
     );

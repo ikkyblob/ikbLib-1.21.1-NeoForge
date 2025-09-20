@@ -38,6 +38,7 @@ public class PullFromCachedVoronoiDF implements SeededDensityFunction {
             default -> this.cachedVoronoi.getDistance(pos, ordinal - 1);
             case 1 -> this.cachedVoronoi.getValue(pos, ordinal - 1);
             case 2 -> this.cachedVoronoi.getVelocity(pos, ordinal - 1);
+            case 3 -> this.cachedVoronoi.getPassive(pos, ordinal - 1);
         };
     }
 
