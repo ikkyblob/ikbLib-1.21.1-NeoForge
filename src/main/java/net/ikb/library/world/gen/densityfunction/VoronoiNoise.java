@@ -65,7 +65,7 @@ public class VoronoiNoise {
     public double getVoronoi(DensityFunction.FunctionContext blockPos, boolean flat, double scale, double jitter, int metric, int mode, int ordinal) {
 
         double x = ((double) blockPos.blockX()) / scale;
-        double y = flat ? 0 : ((double) blockPos.blockX()) / scale;
+        double y = flat ? 0 : ((double) blockPos.blockY()) / scale;
         double z = ((double) blockPos.blockZ()) / scale;
 
         Vec3i posIndex = new Vec3i(
