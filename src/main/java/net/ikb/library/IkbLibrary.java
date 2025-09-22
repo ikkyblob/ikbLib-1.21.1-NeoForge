@@ -37,7 +37,7 @@ public class IkbLibrary {
 
     }
 
-    @EventBusSubscriber(modid = IkbLibrary.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber
     static class ClientModEvents {
         @SubscribeEvent
         static void onClientSetup(FMLClientSetupEvent event) {
