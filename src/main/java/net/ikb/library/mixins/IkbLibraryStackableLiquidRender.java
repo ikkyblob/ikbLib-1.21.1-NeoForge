@@ -11,6 +11,7 @@ import net.ikb.library.tags.IkbLibTags;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockRenderView;
@@ -27,26 +28,30 @@ public abstract class IkbLibraryStackableLiquidRender {
         return false;
     }
 
+    @Shadow
+    private static boolean isSameFluid(FluidState a, FluidState b) {
+        return false;
+    }
+
     @Unique
-    private static boolean ikbLib$shouldRenderFace(BlockRenderView level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState, boolean brineLike) {
-        FluidState neighborFluid = otherState.getFluidState();
+    private static boolean ikbLib$shouldRenderFace(BlockRenderView level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, FluidState neighborFluidState, boolean brineLike) {
         if (brineLike) {
             if (direction == Direction.DOWN) return false;
             Fluid aboveFluid = level.getFluidState(pos.offset(direction).up()).getFluid();
-            if (neighborFluid.getFluid().matchesType(aboveFluid)) return false;
+            if (neighborFluidState.getFluid().matchesType(aboveFluid)) return false;
             else if (aboveFluid.matchesType(fluidState.getFluid()))
-                return shouldRenderSide(level, pos, fluidState, selfState, direction, ((FlowableFluid) aboveFluid).getFlowing(8, true).getBlockState());
+                return shouldRenderSide(level, pos, fluidState, selfState, direction, ((FlowableFluid) aboveFluid).getFlowing(8, true));
         }
 
-        return shouldRenderSide(level, pos, fluidState, selfState, direction, otherState);
+        return shouldRenderSide(level, pos, fluidState, selfState, direction, neighborFluidState);
     }
 
     @Unique
     private static boolean ikbLib$isBrineLike(FluidState here, FluidState there) {
         if (!isSameFluid(here, there)) {
             for (TagKey<Fluid> check : IkbLibTags.Fluids.stackableTags)
-                if (here.is(check) && there.is(check))
-                    if (here.getFluidType().getDensity() <= there.getFluidType().getDensity()) return true;
+                if (here.isIn(check) && there.isIn(check))
+                    if (here.getFluid().getDensity() <= there.getFluidType().getDensity()) return true;
         }
         return false;
     }
