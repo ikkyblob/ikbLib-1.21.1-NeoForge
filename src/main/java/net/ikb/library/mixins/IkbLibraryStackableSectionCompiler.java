@@ -45,7 +45,7 @@ public abstract class IkbLibraryStackableSectionCompiler {
             BlockState blockstate,
             FluidState fluidstate,
             Operation<Void> original,
-            @Local SectionBufferBuilderPack sectionBufferBuilderPack,
+            @Local(argsOnly = true) SectionBufferBuilderPack sectionBufferBuilderPack,
             @Local Map<RenderType, BufferBuilder> map
     ) {
         FluidState aboveState = region.getFluidState(blockpos2.above());

@@ -178,10 +178,10 @@ public abstract class IkbLibraryStackableLiquidRender {
                     float flowSin = Mth.sin(flowAngle) * 0.25F;
                     float flowCos = Mth.cos(flowAngle) * 0.25F;
                     uNW = textureatlassprite.getU(0.5F + (-flowCos - flowSin));
-                    vNW = textureatlassprite.getV(0.5F + -flowCos + flowSin);
-                    uSW = textureatlassprite.getU(0.5F + -flowCos + flowSin);
-                    vSW = textureatlassprite.getV(0.5F + flowCos + flowSin);
-                    uSE = textureatlassprite.getU(0.5F + flowCos + flowSin);
+                    vNW = textureatlassprite.getV(0.5F + (-flowCos + flowSin));
+                    uSW = textureatlassprite.getU(0.5F + (-flowCos + flowSin));
+                    vSW = textureatlassprite.getV(0.5F + (flowCos + flowSin));
+                    uSE = textureatlassprite.getU(0.5F + (flowCos + flowSin));
                     vSE = textureatlassprite.getV(0.5F + (flowCos - flowSin));
                     uNE = textureatlassprite.getU(0.5F + (flowCos - flowSin));
                     vNE = textureatlassprite.getV(0.5F + (-flowCos - flowSin));
