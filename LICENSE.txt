@@ -1,6 +1,5 @@
 MIT License
 
-NeoForge Copyright (c) 2023 NeoForged project
 FastNoise Copyright(c) 2023 Jordan Peck (jordan.me2@gmail.com)
 FastNoiseLite Copyright(c) 2023 Contributors
 ikbLibrary Copyright (c) 2025 ikkyblob@gmail.com

@@ -8,7 +8,7 @@ import net.ikb.library.world.gen.densityfunction.CachedVoronoiDF;
 import net.ikb.library.world.gen.densityfunction.PullFromCachedVoronoiDF;
 import net.ikb.library.world.gen.densityfunction.VoronoiDF;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;

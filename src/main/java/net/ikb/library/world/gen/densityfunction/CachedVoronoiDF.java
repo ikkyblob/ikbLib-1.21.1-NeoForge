@@ -3,10 +3,9 @@ package net.ikb.library.world.gen.densityfunction;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.KeyDispatchDataCodec;
-import net.minecraft.world.level.levelgen.DensityFunction;
-
-import javax.annotation.Nullable;
+import net.minecraft.util.dynamic.CodecHolder;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.jetbrains.annotations.Nullable;
 
 public class CachedVoronoiDF implements SeededDensityFunction {
 
@@ -21,7 +20,7 @@ public class CachedVoronoiDF implements SeededDensityFunction {
             ).apply(instance, (CachedVoronoiDF::new))
     );
 
-    public static final KeyDispatchDataCodec<CachedVoronoiDF> CODEC = KeyDispatchDataCodec.of(MAP_CODEC);
+    public static final CodecHolder<CachedVoronoiDF> CODEC = CodecHolder.of(MAP_CODEC);
 
     @Nullable
     public CachedVoronoiNoise noise = null;
@@ -42,33 +41,33 @@ public class CachedVoronoiDF implements SeededDensityFunction {
     }
 
     @Override
-    public double compute(FunctionContext pos) {
+    public double sample(NoisePos pos) {
         return 0;
     }
 
-    public double getDistance(FunctionContext pos, int index) {
+    public double getDistance(NoisePos pos, int index) {
         return this.maxCheck > index && this.noise != null ? this.noise.getDistances(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
     }
 
-    public double getValue(FunctionContext pos, int index) {
+    public double getValue(NoisePos pos, int index) {
         return this.maxCheck > index && this.noise != null ? this.noise.getValues(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
     }
 
-    public double getVelocity(FunctionContext pos, int index) {
+    public double getVelocity(NoisePos pos, int index) {
         return this.maxCheck > index && this.noise != null ? this.noise.getVelocities(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
     }
 
-    public double getPassive(FunctionContext pos, int index) {
+    public double getPassive(NoisePos pos, int index) {
         return this.maxCheck > index && this.noise != null ? this.noise.getPassives(pos, flat, scale, jitter, metric, maxCheck)[index] : 0;
     }
 
     @Override
-    public void fillArray(double[] doubles, ContextProvider contextProvider) {
-        contextProvider.fillAllDirectly(doubles, this);
+    public void fill(double[] doubles, EachApplier eachApplier) {
+        eachApplier.fill(doubles, this);
     }
 
     @Override
-    public DensityFunction mapAll(Visitor visitor) {
+    public DensityFunction apply(DensityFunctionVisitor visitor) {
         return visitor.apply(this);
     }
 
@@ -83,7 +82,7 @@ public class CachedVoronoiDF implements SeededDensityFunction {
     }
 
     @Override
-    public KeyDispatchDataCodec<? extends DensityFunction> codec() {
+    public CodecHolder<? extends DensityFunction> getCodecHolder() {
         return CODEC;
     }
 

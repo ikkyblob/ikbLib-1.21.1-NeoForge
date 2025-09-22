@@ -2,63 +2,53 @@ package net.ikb.library.mixins;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.block.FluidRenderer;
 import net.ikb.library.tags.IkbLibTags;
-import net.minecraft.client.renderer.block.LiquidBlockRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.client.textures.FluidSpriteCache;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockRenderView;
+import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(LiquidBlockRenderer.class)
+@Mixin(FluidRenderer.class)
 public abstract class IkbLibraryStackableLiquidRender {
 
-    @Shadow protected abstract float getHeight(BlockAndTintGetter level, Fluid fluid, BlockPos pos);
-    @Shadow protected abstract float getHeight(BlockAndTintGetter level, Fluid fluid, BlockPos pos, BlockState blockState, FluidState fluidState);
-    @Shadow protected abstract float calculateAverageHeight(BlockAndTintGetter level, Fluid fluid, float currentHeight, float height1, float height2, BlockPos pos);
+    @Shadow protected abstract float getFluidHeight(BlockRenderView level, Fluid fluid, BlockPos pos);
+    @Shadow protected abstract float getFluidHeight(BlockRenderView level, Fluid fluid, BlockPos pos, BlockState blockState, FluidState fluidState);
+    @Shadow protected abstract float calculateFluidHeight(BlockRenderView level, Fluid fluid, float currentHeight, float height1, float height2, BlockPos pos);
     @Shadow private static boolean isNeighborStateHidingOverlay(FluidState selfState, BlockState otherState, Direction neighborFace) {return true;}
-    @Shadow public static boolean shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState) {return true;}
-    @Shadow private static boolean isFaceOccludedByNeighbor(BlockGetter level, BlockPos pos, Direction side, float height, BlockState blockState) {return true;}
-    @Shadow protected abstract int getLightColor(BlockAndTintGetter level, BlockPos pos);
-    @Shadow private static boolean isNeighborSameFluid(FluidState here, FluidState there) {return true;}
+    @Shadow public static boolean shouldRenderSide(BlockRenderView level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState) {return true;}
+    @Shadow private static boolean isSideCovered(BlockView level, BlockPos pos, Direction side, float height, BlockState blockState) {return true;}
+    @Shadow protected abstract int getLight(BlockRenderView level, BlockPos pos);
+    @Shadow private static boolean isSameFluid(FluidState here, FluidState there) {return true;}
 
     @Shadow private void vertex(VertexConsumer buffer, float x, float y, float z, float red, float green, float blue, float alpha, float u, float v, int packedLight) {
         buffer.addVertex(x, y, z).setColor(red, green, blue, alpha).setUv(u, v).setLight(packedLight).setNormal(0.0F, 1.0F, 0.0F);
     }
 
     @Unique
-    private static boolean ikbLib$shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState, boolean brineLike) {
+    private static boolean ikbLib$shouldRenderFace(BlockRenderView level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState, boolean brineLike) {
         FluidState neighborFluid = otherState.getFluidState();
         if (brineLike) {
             if (direction == Direction.DOWN) return false;
             Fluid aboveFluid = level.getFluidState(pos.relative(direction).above()).getType();
             if (neighborFluid.getType().isSame(aboveFluid)) return false;
             else if (aboveFluid.isSame(fluidState.getType()))
-                return shouldRenderFace(level, pos, fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true).createLegacyBlock());
+                return shouldRenderSide(level, pos, fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true).createLegacyBlock());
         }
 
-        return shouldRenderFace(level, pos, fluidState, selfState, direction, otherState);
+        return shouldRenderSide(level, pos, fluidState, selfState, direction, otherState);
     }
 
     @Unique
     private static boolean ikbLib$isBrineLike(FluidState here, FluidState there) {
-        if (!isNeighborSameFluid(here, there)) {
+        if (!isSameFluid(here, there)) {
             for (TagKey<Fluid> check : IkbLibTags.Fluids.stackableTags)
                 if (here.is(check) && there.is(check))
                     if (here.getFluidType().getDensity() <= there.getFluidType().getDensity()) return true;
@@ -67,7 +57,7 @@ public abstract class IkbLibraryStackableLiquidRender {
     }
 
     @WrapMethod(method = "tesselate")
-    public void ikbLib$tesselate(BlockAndTintGetter level, BlockPos pos, VertexConsumer buffer, BlockState blockState, FluidState fluidState, Operation<Void> original) {
+    public void ikbLib$tesselate(BlockRenderView level, BlockPos pos, VertexConsumer buffer, BlockState blockState, FluidState fluidState, Operation<Void> original) {
 
         boolean isVirtual = !level.getFluidState(pos).equals(fluidState);
 
@@ -103,7 +93,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 && !isNeighborStateHidingOverlay(fluidState, blockU, Direction.DOWN);
         boolean renderD = !isVirtual
                 && ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.DOWN, blockD, brineD)
-                && !isFaceOccludedByNeighbor(level, pos, Direction.DOWN, 0.8888889F, blockD);
+                && !isSideCovered(level, pos, Direction.DOWN, 0.8888889F, blockD);
         boolean renderN = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.NORTH, blockN, brineN);
         boolean renderS = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.SOUTH, blockS, brineS);
         boolean renderE = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.EAST, blockE, brineE);
@@ -116,7 +106,7 @@ public abstract class IkbLibraryStackableLiquidRender {
             float shadeW = level.getShade(Direction.WEST, true);
             Fluid fluid = fluidHere.getType();
 
-            float heightHere = this.getHeight(level, fluid, pos, blockHere, fluidHere);
+            float heightHere = this.getFluidHeight(level, fluid, pos, blockHere, fluidHere);
             float heightNE;
             float heightNW;
             float heightSE;
@@ -130,14 +120,14 @@ public abstract class IkbLibraryStackableLiquidRender {
                 heightSE = 1.0F;
                 heightSW = 1.0F;
             } else {
-                float heightN = this.getHeight(level, fluid, pos.north(), blockN, fluidN);
-                float heightS = this.getHeight(level, fluid, pos.south(), blockS, fluidS);
-                float heightE = this.getHeight(level, fluid, pos.east(), blockE, fluidE);
-                float heightW = this.getHeight(level, fluid, pos.west(), blockW, fluidW);
-                heightNE = this.calculateAverageHeight(level, fluid, heightHere, heightN, heightE, pos.relative(Direction.NORTH).relative(Direction.EAST));
-                heightNW = this.calculateAverageHeight(level, fluid, heightHere, heightN, heightW, pos.relative(Direction.NORTH).relative(Direction.WEST));
-                heightSE = this.calculateAverageHeight(level, fluid, heightHere, heightS, heightE, pos.relative(Direction.SOUTH).relative(Direction.EAST));
-                heightSW = this.calculateAverageHeight(level, fluid, heightHere, heightS, heightW, pos.relative(Direction.SOUTH).relative(Direction.WEST));
+                float heightN = this.getFluidHeight(level, fluid, pos.north(), blockN, fluidN);
+                float heightS = this.getFluidHeight(level, fluid, pos.south(), blockS, fluidS);
+                float heightE = this.getFluidHeight(level, fluid, pos.east(), blockE, fluidE);
+                float heightW = this.getFluidHeight(level, fluid, pos.west(), blockW, fluidW);
+                heightNE = this.calculateFluidHeight(level, fluid, heightHere, heightN, heightE, pos.relative(Direction.NORTH).relative(Direction.EAST));
+                heightNW = this.calculateFluidHeight(level, fluid, heightHere, heightN, heightW, pos.relative(Direction.NORTH).relative(Direction.WEST));
+                heightSE = this.calculateFluidHeight(level, fluid, heightHere, heightS, heightE, pos.relative(Direction.SOUTH).relative(Direction.EAST));
+                heightSW = this.calculateFluidHeight(level, fluid, heightHere, heightS, heightW, pos.relative(Direction.SOUTH).relative(Direction.WEST));
             }
 
             blockX = (float)(pos.getX() & 15);
@@ -155,7 +145,7 @@ public abstract class IkbLibraryStackableLiquidRender {
             float renderR;
             float renderG;
             float renderB;
-            if (renderU && !isFaceOccludedByNeighbor(level, pos, Direction.UP, Math.min(Math.min(heightNW, heightSW), Math.min(heightSE, heightNE)), blockU)) {
+            if (renderU && !isSideCovered(level, pos, Direction.UP, Math.min(Math.min(heightNW, heightSW), Math.min(heightSE, heightNE)), blockU)) {
                 heightNW -= 0.001F;
                 heightSW -= 0.001F;
                 heightSE -= 0.001F;
@@ -198,7 +188,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 vSW = Mth.lerp(uvShrink, vSW, vCenter);
                 vSE = Mth.lerp(uvShrink, vSE, vCenter);
                 vNE = Mth.lerp(uvShrink, vNE, vCenter);
-                int l = this.getLightColor(level, pos);
+                int l = this.getLight(level, pos);
                 renderR = shadeU * red;
                 renderG = shadeU * green;
                 renderB = shadeU * blue;
@@ -219,7 +209,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 float u1 = atextureatlassprite[0].getU1();
                 float v0 = atextureatlassprite[0].getV0();
                 float v1 = atextureatlassprite[0].getV1();
-                int k = this.getLightColor(level, pos.below());
+                int k = this.getLight(level, pos.below());
                 renderR = shadeD * red;
                 renderG = shadeD * green;
                 renderB = shadeD * blue;
@@ -229,7 +219,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 this.vertex(buffer, blockX + 1.0F, blockY + heightD, blockZ + 1.0F, renderR, renderG, renderB, alpha, u1, v1, k);
             }
 
-            int j = this.getLightColor(level, pos);
+            int j = this.getLight(level, pos);
 
             for(Direction direction : Direction.Plane.HORIZONTAL) {
                 //facing toward the thing
@@ -260,12 +250,12 @@ public abstract class IkbLibraryStackableLiquidRender {
                             yTR = heightNW;
                             yTL = heightNE;
                             fluid = fluidN.getType();
-                            float brineHeightA = this.getHeight(level, fluid, pos.north(), blockN, fluidN);
-                            float brineHeightL = this.getHeight(level, fluid, pos.north().east());
-                            float brineHeightR = this.getHeight(level, fluid, pos.north().west());
-                            float brineHeightH = this.getHeight(level, fluid, pos);
-                            yBL = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.east());
-                            yBR = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.west());
+                            float brineHeightA = this.getFluidHeight(level, fluid, pos.north(), blockN, fluidN);
+                            float brineHeightL = this.getFluidHeight(level, fluid, pos.north().east());
+                            float brineHeightR = this.getFluidHeight(level, fluid, pos.north().west());
+                            float brineHeightH = this.getFluidHeight(level, fluid, pos);
+                            yBL = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.east());
+                            yBR = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.west());
                         } else {
                             yTR = heightNW;
                             yTL = heightNE;
@@ -288,12 +278,12 @@ public abstract class IkbLibraryStackableLiquidRender {
                             yTR = heightSE;
                             yTL = heightSW;
                             fluid = fluidS.getType();
-                            float brineHeightA = this.getHeight(level, fluid, pos.south(), blockS, fluidS);
-                            float brineHeightL = this.getHeight(level, fluid, pos.south().west());
-                            float brineHeightR = this.getHeight(level, fluid, pos.south().east());
-                            float brineHeightH = this.getHeight(level, fluid, pos);
-                            yBL = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.west());
-                            yBR = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.east());
+                            float brineHeightA = this.getFluidHeight(level, fluid, pos.south(), blockS, fluidS);
+                            float brineHeightL = this.getFluidHeight(level, fluid, pos.south().west());
+                            float brineHeightR = this.getFluidHeight(level, fluid, pos.south().east());
+                            float brineHeightH = this.getFluidHeight(level, fluid, pos);
+                            yBL = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.west());
+                            yBR = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.east());
                         } else {
                             yTR = heightSE;
                             yTL = heightSW;
@@ -316,12 +306,12 @@ public abstract class IkbLibraryStackableLiquidRender {
                             yTR = heightSW;
                             yTL = heightNW;
                             fluid = fluidW.getType();
-                            float brineHeightA = this.getHeight(level, fluid, pos.north(), blockW, fluidW);
-                            float brineHeightL = this.getHeight(level, fluid, pos.north().west());
-                            float brineHeightR = this.getHeight(level, fluid, pos.south().west());
-                            float brineHeightH = this.getHeight(level, fluid, pos);
-                            yBL = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.north());
-                            yBR = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.south());
+                            float brineHeightA = this.getFluidHeight(level, fluid, pos.north(), blockW, fluidW);
+                            float brineHeightL = this.getFluidHeight(level, fluid, pos.north().west());
+                            float brineHeightR = this.getFluidHeight(level, fluid, pos.south().west());
+                            float brineHeightH = this.getFluidHeight(level, fluid, pos);
+                            yBL = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.north());
+                            yBR = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.south());
                         } else {
                             yTR = heightSW;
                             yTL = heightNW;
@@ -344,12 +334,12 @@ public abstract class IkbLibraryStackableLiquidRender {
                             yTR = heightNE;
                             yTL = heightSE;
                             fluid = fluidE.getType();
-                            float brineHeightA = this.getHeight(level, fluid, pos.north(), blockE, fluidE);
-                            float brineHeightL = this.getHeight(level, fluid, pos.south().east());
-                            float brineHeightR = this.getHeight(level, fluid, pos.north().east());
-                            float brineHeightH = this.getHeight(level, fluid, pos);
-                            yBL = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.south());
-                            yBR = this.calculateAverageHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.north());
+                            float brineHeightA = this.getFluidHeight(level, fluid, pos.north(), blockE, fluidE);
+                            float brineHeightL = this.getFluidHeight(level, fluid, pos.south().east());
+                            float brineHeightR = this.getFluidHeight(level, fluid, pos.north().east());
+                            float brineHeightH = this.getFluidHeight(level, fluid, pos);
+                            yBL = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightL, brineHeightH, pos.south());
+                            yBR = this.calculateFluidHeight(level, fluid, brineHeightA, brineHeightR, brineHeightH, pos.north());
                         } else {
                             yTR = heightNE;
                             yTL = heightSE;
@@ -363,7 +353,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 boolean flagX = (yBL > yTL || yBR > yTR) && renderFace;
 
                 if (renderFace
-                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(level, pos, direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isFaceOccludedByNeighbor(level, pos, direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
+                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(level, pos, direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isSideCovered(level, pos, direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
                     BlockPos blockpos = pos.relative(direction);
                     TextureAtlasSprite textureatlassprite2 = atextureatlassprite[1];
                     if (atextureatlassprite[2] != null
@@ -463,7 +453,7 @@ public abstract class IkbLibraryStackableLiquidRender {
     }
 
     @Unique
-    private boolean ikbLib$isLowFaceOccludedByNeighbor(BlockAndTintGetter level, BlockPos pos, Direction face, float bottom, BlockState state) {
+    private boolean ikbLib$isLowFaceOccludedByNeighbor(BlockRenderView level, BlockPos pos, Direction face, float bottom, BlockState state) {
         if (state.canOcclude()) {
             VoxelShape voxelshape = Shapes.box(0.0, bottom, 0.0, 1.0, 1.0, 1.0);
             VoxelShape voxelshape1 = state.getOcclusionShape(level, pos.relative(face));

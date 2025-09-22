@@ -1,6 +1,6 @@
 package net.ikb.library.world.gen.densityfunction;
 
-import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 public interface SeededDensityFunction extends DensityFunction {
 
