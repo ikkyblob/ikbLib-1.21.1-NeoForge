@@ -28,14 +28,14 @@ public abstract class IkbLibraryStackableFlowingFluid extends Fluid {
     }
 
     @WrapMethod(method = "isWaterHole")
-    public boolean ikbLib$waterHoleStackable(BlockGetter level, Fluid fluid, BlockPos pos, BlockState state, BlockPos spreadPos, BlockState spreadState, Operation<Boolean> original) {
-        if (!this.isSame(spreadState.getFluidState().getType()) && fluid.getFluidType().getDensity() <= spreadState.getFluidState().getFluidType().getDensity())
+    public boolean ikbLib$waterHoleStackable(BlockGetter level, BlockPos pos, BlockState state, BlockPos spreadPos, BlockState spreadState, Operation<Boolean> original) {
+        if (!this.isSame(spreadState.getFluidState().getType()) && this.getFluidType().getDensity() <= spreadState.getFluidState().getFluidType().getDensity())
             for (TagKey<Fluid> check : IkbLibTags.Fluids.stackableTags)
-                if (spreadState.getFluidState().is(check) && fluid.defaultFluidState().is(check))
+                if (spreadState.getFluidState().is(check) && this.defaultFluidState().is(check))
                     return !(spreadState.getFluidState().isSource() || spreadState.getFluidState().getAmount() >= 7)
-                        && original.call(level, fluid, pos, state, spreadPos, spreadState);
+                        && original.call(level, pos, state, spreadPos, spreadState);
 
-        return original.call(level, fluid, pos, state, spreadPos, spreadState);
+        return original.call(level, pos, state, spreadPos, spreadState);
     }
 
 }

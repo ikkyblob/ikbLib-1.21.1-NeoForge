@@ -11,7 +11,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
@@ -33,8 +32,8 @@ public abstract class IkbLibraryStackableLiquidRender {
     @Shadow protected abstract float getHeight(BlockAndTintGetter level, Fluid fluid, BlockPos pos, BlockState blockState, FluidState fluidState);
     @Shadow protected abstract float calculateAverageHeight(BlockAndTintGetter level, Fluid fluid, float currentHeight, float height1, float height2, BlockPos pos);
     @Shadow private static boolean isNeighborStateHidingOverlay(FluidState selfState, BlockState otherState, Direction neighborFace) {return true;}
-    @Shadow public static boolean shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState) {return true;}
-    @Shadow private static boolean isFaceOccludedByNeighbor(BlockGetter level, BlockPos pos, Direction side, float height, BlockState blockState) {return true;}
+    @Shadow public static boolean shouldRenderFace(FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState) {return true;}
+    @Shadow private static boolean isFaceOccludedByNeighbor(Direction side, float height, BlockState blockState) {return true;}
     @Shadow protected abstract int getLightColor(BlockAndTintGetter level, BlockPos pos);
     @Shadow private static boolean isNeighborSameFluid(FluidState here, FluidState there) {return true;}
 
@@ -50,10 +49,10 @@ public abstract class IkbLibraryStackableLiquidRender {
             Fluid aboveFluid = level.getFluidState(pos.relative(direction).above()).getType();
             if (neighborFluid.getType().isSame(aboveFluid)) return false;
             else if (aboveFluid.isSame(fluidState.getType()))
-                return shouldRenderFace(level, pos, fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true).createLegacyBlock());
+                return shouldRenderFace(fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true).createLegacyBlock());
         }
 
-        return shouldRenderFace(level, pos, fluidState, selfState, direction, otherState);
+        return shouldRenderFace(fluidState, selfState, direction, otherState);
     }
 
     @Unique
@@ -103,7 +102,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 && !isNeighborStateHidingOverlay(fluidState, blockU, Direction.DOWN);
         boolean renderD = !isVirtual
                 && ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.DOWN, blockD, brineD)
-                && !isFaceOccludedByNeighbor(level, pos, Direction.DOWN, 0.8888889F, blockD);
+                && !isFaceOccludedByNeighbor(Direction.DOWN, 0.8888889F, blockD);
         boolean renderN = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.NORTH, blockN, brineN);
         boolean renderS = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.SOUTH, blockS, brineS);
         boolean renderE = ikbLib$shouldRenderFace(level, pos, fluidState, blockState, Direction.EAST, blockE, brineE);
@@ -155,7 +154,7 @@ public abstract class IkbLibraryStackableLiquidRender {
             float renderR;
             float renderG;
             float renderB;
-            if (renderU && !isFaceOccludedByNeighbor(level, pos, Direction.UP, Math.min(Math.min(heightNW, heightSW), Math.min(heightSE, heightNE)), blockU)) {
+            if (renderU && !isFaceOccludedByNeighbor(Direction.UP, Math.min(Math.min(heightNW, heightSW), Math.min(heightSE, heightNE)), blockU)) {
                 heightNW -= 0.001F;
                 heightSW -= 0.001F;
                 heightSE -= 0.001F;
@@ -363,7 +362,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 boolean flagX = (yBL > yTL || yBR > yTR) && renderFace;
 
                 if (renderFace
-                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(level, pos, direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isFaceOccludedByNeighbor(level, pos, direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
+                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isFaceOccludedByNeighbor(direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
                     BlockPos blockpos = pos.relative(direction);
                     TextureAtlasSprite textureatlassprite2 = atextureatlassprite[1];
                     if (atextureatlassprite[2] != null
@@ -463,10 +462,10 @@ public abstract class IkbLibraryStackableLiquidRender {
     }
 
     @Unique
-    private boolean ikbLib$isLowFaceOccludedByNeighbor(BlockAndTintGetter level, BlockPos pos, Direction face, float bottom, BlockState state) {
+    private boolean ikbLib$isLowFaceOccludedByNeighbor(Direction face, float bottom, BlockState state) {
         if (state.canOcclude()) {
             VoxelShape voxelshape = Shapes.box(0.0, bottom, 0.0, 1.0, 1.0, 1.0);
-            VoxelShape voxelshape1 = state.getOcclusionShape(level, pos.relative(face));
+            VoxelShape voxelshape1 = state.getOcclusionShape();
             return Shapes.blockOccudes(voxelshape, voxelshape1, face);
         } else return false;
     }
