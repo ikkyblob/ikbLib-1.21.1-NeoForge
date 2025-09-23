@@ -29,19 +29,27 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(LiquidBlockRenderer.class)
 public abstract class IkbLibraryStackableLiquidRender {
 
+    @Shadow protected abstract float getHeight(BlockAndTintGetter level, Fluid fluid, BlockPos pos);
+    @Shadow protected abstract float getHeight(BlockAndTintGetter level, Fluid fluid, BlockPos pos, BlockState blockState, FluidState fluidState);
+    @Shadow protected abstract float calculateAverageHeight(BlockAndTintGetter level, Fluid fluid, float currentHeight, float height1, float height2, BlockPos pos);
+    @Shadow private static boolean isNeighborStateHidingOverlay(FluidState selfState, BlockState otherState, Direction neighborFace) {return true;}
+    @Shadow public static boolean shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, FluidState otherState) {return true;}
+    @Shadow private static boolean isFaceOccludedByNeighbor(BlockGetter level, BlockPos pos, Direction side, float height, BlockState blockState) {return true;}
+    @Shadow protected abstract int getLightColor(BlockAndTintGetter level, BlockPos pos);
+    @Shadow private static boolean isNeighborSameFluid(FluidState here, FluidState there) {return true;}
+
     @Shadow private void vertex(VertexConsumer buffer, float x, float y, float z, float red, float green, float blue, float alpha, float u, float v, int packedLight) {
         buffer.addVertex(x, y, z).setColor(red, green, blue, alpha).setUv(u, v).setLight(packedLight).setNormal(0.0F, 1.0F, 0.0F);
     }
 
     @Unique
-    private static boolean ikbLib$shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, BlockState otherState, boolean brineLike) {
-        FluidState neighborFluid = otherState.getFluidState();
+    private static boolean ikbLib$shouldRenderFace(BlockAndTintGetter level, BlockPos pos, FluidState fluidState, BlockState selfState, Direction direction, FluidState otherState, boolean brineLike) {
         if (brineLike) {
             if (direction == Direction.DOWN) return false;
             Fluid aboveFluid = level.getFluidState(pos.relative(direction).above()).getType();
-            if (neighborFluid.getType().isSame(aboveFluid)) return false;
+            if (otherState.getType().isSame(aboveFluid)) return false;
             else if (aboveFluid.isSame(fluidState.getType()))
-                return shouldRenderFace(level, pos, fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true).createLegacyBlock());
+                return shouldRenderFace(level, pos, fluidState, selfState, direction, ((FlowingFluid) aboveFluid).getFlowing(8, true));
         }
 
         return shouldRenderFace(level, pos, fluidState, selfState, direction, otherState);
