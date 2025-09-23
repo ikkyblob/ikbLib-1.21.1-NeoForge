@@ -362,7 +362,7 @@ public abstract class IkbLibraryStackableLiquidRender {
                 boolean flagX = (yBL > yTL || yBR > yTR) && renderFace;
 
                 if (renderFace
-                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isFaceOccludedByNeighbor(direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
+                        && (isVirtual ? !ikbLib$isLowFaceOccludedByNeighbor(level, pos, direction, Math.min(yBL, yBR), level.getBlockState(pos.relative(direction))) : !isFaceOccludedByNeighbor(direction, Math.max(yTL, yTR), level.getBlockState(pos.relative(direction))))) {
                     BlockPos blockpos = pos.relative(direction);
                     TextureAtlasSprite textureatlassprite2 = atextureatlassprite[1];
                     if (atextureatlassprite[2] != null
@@ -462,10 +462,10 @@ public abstract class IkbLibraryStackableLiquidRender {
     }
 
     @Unique
-    private boolean ikbLib$isLowFaceOccludedByNeighbor(Direction face, float bottom, BlockState state) {
+    private boolean ikbLib$isLowFaceOccludedByNeighbor(BlockAndTintGetter level, BlockPos pos, Direction face, float bottom, BlockState state) {
         if (state.canOcclude()) {
             VoxelShape voxelshape = Shapes.box(0.0, bottom, 0.0, 1.0, 1.0, 1.0);
-            VoxelShape voxelshape1 = state.getOcclusionShape();
+            VoxelShape voxelshape1 = state.getOcclusionShape(level, pos.relative(face));
             return Shapes.blockOccudes(voxelshape, voxelshape1, face);
         } else return false;
     }
