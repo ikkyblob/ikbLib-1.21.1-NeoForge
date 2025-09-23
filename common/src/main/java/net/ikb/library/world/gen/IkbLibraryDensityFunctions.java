@@ -4,6 +4,8 @@ import com.mojang.serialization.MapCodec;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.DeferredSupplier;
 import dev.architectury.registry.registries.RegistrySupplier;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.ikb.library.IkbLibrary;
 import net.ikb.library.world.gen.densityfunction.CachedVoronoiDF;
 import net.ikb.library.world.gen.densityfunction.PullFromCachedVoronoiDF;
@@ -14,6 +16,7 @@ import net.minecraft.world.level.levelgen.DensityFunction;
 
 import java.util.function.Supplier;
 
+@Environment(EnvType.SERVER)
 public class IkbLibraryDensityFunctions {
 
     public static final DeferredRegister<MapCodec<? extends DensityFunction>> DENSITY_FUNCTION_TYPES =
