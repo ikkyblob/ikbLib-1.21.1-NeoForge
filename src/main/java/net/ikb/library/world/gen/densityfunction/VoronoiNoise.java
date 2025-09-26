@@ -77,10 +77,16 @@ public class VoronoiNoise {
 
         for (int xi = -1; xi <= 1; xi++) {
             for (int zi = -1; zi <= 1; zi++) {
+
                 Vec3i checkIndex = new Vec3i(posIndex.getX() + xi, posIndex.getY(), posIndex.getZ() + zi);
-                if (!this.MEMOIZED_PLATES.containsKey(checkIndex))
-                    this.MEMOIZED_PLATES.put(checkIndex, new VoronoiPlate(seed, checkIndex, jitter));
-                VoronoiPlate checkPlate = this.MEMOIZED_PLATES.get(checkIndex);
+
+                VoronoiPlate checkPlate;
+                if (this.MEMOIZED_PLATES.containsKey(checkIndex)) checkPlate = this.MEMOIZED_PLATES.get(checkIndex);
+                else {
+                    checkPlate = new VoronoiPlate(seed, checkIndex, jitter);
+                    this.MEMOIZED_PLATES.put(checkIndex, checkPlate);
+                }
+
                 double checkDistance = checkPlate.getDist(new Vec3(x, y, z), flat, metric);
 
                 for (int i = 0; i < ordinal; i++) {
